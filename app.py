@@ -1,5 +1,6 @@
 
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request
+from flask_socketio import SocketIO, emit
 from collections import deque
 from typing import Dict, List, Optional, Any
 from langchain import LLMChain, OpenAI, PromptTemplate
@@ -21,6 +22,7 @@ import faiss
 embedding_size = 1536
 index = faiss.IndexFlatL2(embedding_size)
 vectorstore = FAISS(embeddings_model.embed_query, index, InMemoryDocstore({}), {})
+
 
 
 class TaskCreationChain(LLMChain):
@@ -160,6 +162,7 @@ class BabyAGI(Chain, BaseModel):
     task_id_counter: int = Field(1)
     vectorstore: VectorStore = Field(init=False)
     max_iterations: Optional[int] = None
+    results = []
 
     class Config:
         """Configuration for this pydantic object."""
@@ -171,16 +174,25 @@ class BabyAGI(Chain, BaseModel):
 
     def print_task_list(self):
         print("\033[95m\033[1m" + "\n*****TASK LIST*****\n" + "\033[0m\033[0m")
+        self.results.append(str("*****TASK LIST*****"))
         for t in self.task_list:
             print(str(t["task_id"]) + ": " + t["task_name"])
+            self.results.append(str(t["task_id"]) + ": " + t["task_name"])
+            emit("result", str(t["task_id"]) + ": " + t["task_name"])
 
     def print_next_task(self, task: Dict):
         print("\033[92m\033[1m" + "\n*****NEXT TASK*****\n" + "\033[0m\033[0m")
+        self.results.append(str("*****NEXT TASK*****"))
         print(str(task["task_id"]) + ": " + task["task_name"])
+        self.results.append(str(task["task_id"]) + ": " + task["task_name"])
+        emit("result", str(task["task_id"]) + ": " + task["task_name"])
 
     def print_task_result(self, result: str):
         print("\033[93m\033[1m" + "\n*****TASK RESULT*****\n" + "\033[0m\033[0m")
+        self.results.append(str("*****TASK RESULT*****"))
         print(result)
+        self.results.append(result)
+        emit("result", result)
 
     @property
     def input_keys(self) -> List[str]:
@@ -244,6 +256,7 @@ class BabyAGI(Chain, BaseModel):
                 print(
                     "\033[91m\033[1m" + "\n*****TASK ENDING*****\n" + "\033[0m\033[0m"
                 )
+                self.results.append(str("*****TASK ENDING*****"))
                 break
         return {}
 
@@ -266,6 +279,7 @@ class BabyAGI(Chain, BaseModel):
         )
 
 app = Flask(__name__)
+socketio = SocketIO(app)
 
 # Add TailwindCSS to the app
 @app.route('/css/<path:path>')
@@ -273,26 +287,25 @@ def static_css(path):
     return app.send_static_file(os.path.join('css', path))
 
 # Add a route for the index page
-@app.route("/", methods=["GET", "POST"])
+@app.route("/", methods=["GET"])
 def index():
-    if request.method == "POST":
-        objective = request.form["objective"]
-        temperature = float(request.form["temperature"])
-        verbose = request.form["verbose"] == "True"
-        max_iterations = int(request.form["max_iterations"])
-
-        # Set up and run the BabyAGI
-        llm = OpenAI(temperature=temperature)
-        baby_agi = BabyAGI.from_llm(
-            llm=llm, vectorstore=vectorstore, verbose=verbose, max_iterations=max_iterations
-        )
-        result = baby_agi({"objective": objective})
-
-        return jsonify(result)
     return render_template("index.html")
 
+@socketio.on("run_babyagi")
+def run_babyagi(data):
+    objective = data["objective"]
+    temperature = float(data["temperature"])
+    verbose = data["verbose"] == "True"
+    max_iterations = int(data["max_iterations"])
+
+    # Set up and run the BabyAGI
+    llm = OpenAI(temperature=temperature)
+    baby_agi = BabyAGI.from_llm(
+        llm=llm, vectorstore=vectorstore, verbose=verbose, max_iterations=max_iterations
+    )
+    result = baby_agi({"objective": objective})
+
+    emit("result", baby_agi.results)
+
 if __name__ == "__main__":
-    app.run(debug=True)
-
-
-    
+    socketio.run(app, debug=True)
