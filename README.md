@@ -1,6 +1,8 @@
 # (mini) AGI TaskGenius GPT - AI-Powered Task Manager and Orchestrator
 
-(mini) AGI TaskGenius GPT is a groundbreaking AI-driven task manager and orchestrator that harnesses advanced natural language processing technology to generate, prioritize, and complete tasks based on user objectives. Inspired by Yohei Nakajima's innovative work on BabyAGI, TaskGenius incorporates a Flask and TailwindCSS UI, offering a seamless experience with OpenAI models. With real-time progress updates and an attractive user interface, TaskGenius is the ultimate solution for managing and automating intricate workflows.
+TaskGenius is a groundbreaking AI-driven task manager and orchestrator that harnesses advanced natural language processing technology to generate, prioritize, and complete tasks based on user objectives. Built with Flask, LangChain, and FAISS, this app offers a seamless experience with OpenAI models. TaskGenius features real-time progress updates and an attractive user interface crafted with TailwindCSS, making it the ultimate solution for managing and automating intricate workflows.
+
+(mini) AGI TaskGenius GPT, a project wholly inspired by [Yohei Nakajima](https://twitter.com/yoheinakajima)'s pioneering efforts on [BabyAGI](https://github.com/yoheinakajima/babyagi/tree/main), further enhances his inventive groundwork by integrating a Flask and TailwindCSS UI. 
 
 ![(mini) AGI TaskGenius GPT Screenshot](screenshot.png)
 
