@@ -41,7 +41,3 @@ python app.py
 2. Adjust the temperature, verbosity, and maximum iterations as per your requirements.
 3. Click "Run TaskGenius" to initiate the AI-driven task management process.
 4. Monitor the real-time progress of task generation, prioritization, and execution in the "Result" section.
-
-## License
-
-This project is licensed under the MIT License - refer to the [LICENSE](LICENSE) file for more information.
